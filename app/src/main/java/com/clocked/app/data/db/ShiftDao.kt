@@ -15,10 +15,6 @@ interface ShiftDao {
     @Query("SELECT * FROM shifts WHERE date LIKE :yearMonthPrefix || '%' ORDER BY date, startTime")
     fun getShiftsForMonth(yearMonthPrefix: String): Flow<List<ShiftEntity>>
 
-    /** One-shot fetch — used by import to check for duplicates. */
-    @Query("SELECT * FROM shifts WHERE date = :date AND startTime = :startTime LIMIT 1")
-    suspend fun findByDateAndStart(date: String, startTime: String): ShiftEntity?
-
     @Query("SELECT * FROM shifts WHERE id = :id")
     suspend fun getById(id: Long): ShiftEntity?
 

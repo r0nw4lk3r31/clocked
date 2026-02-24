@@ -139,7 +139,17 @@ fun EditShiftScreen(
                 label = { Text("Eindtijd  (HH:mm)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                isError = state.timeError != null,
             )
+
+            // Time validation error
+            state.timeError?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
 
             // Shift type chips
             Text("Type", style = MaterialTheme.typography.labelLarge)

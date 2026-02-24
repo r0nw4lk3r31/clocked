@@ -116,6 +116,16 @@ class ImportShiftsUseCaseTest {
     // ─── error paths ──────────────────────────────────────────────────────────
 
     @Test
+    fun `blank alias returns Error without touching the file`() = runTest {
+        val result = useCase(uri, "  ")
+
+        assertTrue(result is ImportResult.Error)
+        assertTrue((result as ImportResult.Error).message.contains("alias"))
+        // ContentResolver should never be called
+        io.mockk.verify(exactly = 0) { contentResolver.openInputStream(any()) }
+    }
+
+    @Test
     fun `null InputStream returns Error with could-not-open message`() = runTest {
         every { contentResolver.openInputStream(uri) } returns null
 

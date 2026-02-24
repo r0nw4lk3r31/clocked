@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 data class EditShiftUiState(
@@ -20,6 +22,7 @@ data class EditShiftUiState(
     val endTime: String = "17:00",
     val shiftType: ShiftType = ShiftType.MANUAL,
     val note: String = "",
+    val timeError: String? = null,
     val isSaving: Boolean = false,
     val isNewShift: Boolean = true,
 )
@@ -61,14 +64,22 @@ class EditShiftViewModel @Inject constructor(
 
     fun save(onDone: () -> Unit) {
         val s = _state.value
+        val fmt = DateTimeFormatter.ofPattern("HH:mm")
+        val startT = runCatching { LocalTime.parse(s.startTime, fmt) }.getOrNull()
+        val endT = runCatching { LocalTime.parse(s.endTime, fmt) }.getOrNull()
+        if (startT == null || endT == null) {
+            _state.value = s.copy(timeError = "Tijden moeten het formaat HH:mm hebben")
+            return
+        }
+        _state.value = s.copy(timeError = null)
         viewModelScope.launch {
-            _state.value = s.copy(isSaving = true)
+            _state.value = _state.value.copy(isSaving = true)
             val shift = Shift(
                 id = if (shiftId > 0L) shiftId else 0L,
                 date = s.date,
                 startTime = s.startTime,
                 endTime = s.endTime,
-                crossesMidnight = s.shiftType == ShiftType.NACHT,
+                crossesMidnight = endT <= startT,
                 shiftType = s.shiftType,
                 ward = "Manueel",
                 note = s.note,

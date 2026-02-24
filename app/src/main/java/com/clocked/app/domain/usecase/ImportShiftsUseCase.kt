@@ -7,6 +7,8 @@ import android.util.Log
 import com.clocked.app.data.repository.ShiftRepository
 import com.clocked.app.parser.ExcelParser
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 sealed class ImportResult {
@@ -20,6 +22,7 @@ class ImportShiftsUseCase @Inject constructor(
     private val repository: ShiftRepository,
 ) {
     suspend operator fun invoke(uri: Uri, alias: String): ImportResult {
+        if (alias.isBlank()) return ImportResult.Error("Geen alias ingesteld — stel je naam in via Instellingen")
         return try {
             val inputStream = context.contentResolver.openInputStream(uri)
                 ?: return ImportResult.Error("Could not open file")
@@ -31,7 +34,9 @@ class ImportShiftsUseCase @Inject constructor(
                 }
                 ?: uri.lastPathSegment
                 ?: ""
-            val shifts = inputStream.use { parser.parse(it, filename, alias) }
+            val shifts = withContext(Dispatchers.IO) {
+                inputStream.use { parser.parse(it, filename, alias) }
+            }
 
             val (inserted, skipped) = repository.importShifts(shifts)
             repository.pruneOldMonths()
