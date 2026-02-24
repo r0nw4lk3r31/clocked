@@ -1,0 +1,8 @@
+<resources>
+    <!-- Base application theme — window chrome only; Compose handles everything else -->
+    <style name="Theme.Clocked" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#0D0D1A</item>
+        <item name="android:navigationBarColor">#0D0D1A</item>
+        <item name="android:windowBackground">#0D0D1A</item>
+    </style>
+</resources>
