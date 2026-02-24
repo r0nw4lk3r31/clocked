@@ -148,7 +148,9 @@ class ExcelParser @Inject constructor() {
 
     private fun Row.nameMatches(colIndex: Int, alias: String): Boolean {
         val cell = getCell(colIndex) ?: return false
-        return cell.stringValue()?.trim()?.lowercase() == alias
+        val raw = cell.stringValue()?.trim()?.lowercase() ?: return false
+        // Handle slash-separated or comma-separated names like "Ron/noemie"
+        return raw.split('/', ',').any { it.trim() == alias }
     }
 
     private fun Row.intCell(colIndex: Int): Int? {

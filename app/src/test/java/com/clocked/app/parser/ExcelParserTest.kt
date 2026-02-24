@@ -201,6 +201,28 @@ class ExcelParserTest {
         }
     }
 
+    @Test
+    fun `DP slash-separated name like Ron-noemie matches alias ron`() {
+        val stream = workbook { it.dataRow(3, dayNum = 23, dpName = "Ron/noemie") }
+        val shifts = parser.parse(stream, "202602.xlsx", "ron")
+
+        assertEquals(1, shifts.size)
+        with(shifts[0]) {
+            assertEquals(ShiftType.DP, shiftType)
+            assertEquals("09:00", startTime)
+            assertEquals("14:30", endTime)
+            assertEquals(LocalDate.of(2026, 2, 23), date)
+        }
+    }
+
+    @Test
+    fun `comma-separated name in any slot matches alias`() {
+        val stream = workbook { it.dataRow(3, dayNum = 5, dag1Name = "jan,ron", dag1Start = "8:00", dag1End = "16:00") }
+        val shifts = parser.parse(stream, "202602.xlsx", "ron")
+        assertEquals(1, shifts.size)
+        assertEquals(ShiftType.DAG1, shifts[0].shiftType)
+    }
+
     // ─── multiple rows / deduplication ───────────────────────────────────────
 
     @Test
