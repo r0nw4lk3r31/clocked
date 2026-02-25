@@ -1,5 +1,6 @@
 package com.clocked.app.ui.settings
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -35,7 +37,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -48,8 +52,22 @@ fun SettingsScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
     var showClearConfirm by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
+
+    // Fire share sheet when export is ready
+    LaunchedEffect(state.exportUri) {
+        state.exportUri?.let { uri ->
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(intent, "Exporteer shifts"))
+            viewModel.clearExportUri()
+        }
+    }
 
     LaunchedEffect(state.savedMessage) {
         state.savedMessage?.let {
@@ -163,6 +181,23 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
             )
+
+            OutlinedButton(
+                onClick = { viewModel.exportCurrentMonth() },
+                enabled = !state.isExporting,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                if (state.isExporting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .height(18.dp),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text("Exporteer deze maand (CSV)")
+                }
+            }
 
             OutlinedButton(
                 onClick = { showClearConfirm = true },

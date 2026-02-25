@@ -1,21 +1,26 @@
 package com.clocked.app.ui.settings
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clocked.app.data.preferences.UserPreferences
 import com.clocked.app.data.repository.ShiftRepository
+import com.clocked.app.domain.usecase.ExportCsvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.YearMonth
 import javax.inject.Inject
 
 data class SettingsUiState(
     val fullName: String = "",
     val alias: String = "",
     val isSaving: Boolean = false,
+    val isExporting: Boolean = false,
+    val exportUri: Uri? = null,
     val savedMessage: String? = null,
 )
 
@@ -23,6 +28,7 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val prefs: UserPreferences,
     private val repository: ShiftRepository,
+    private val exportCsv: ExportCsvUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
@@ -50,6 +56,25 @@ class SettingsViewModel @Inject constructor(
 
     fun clearSavedMessage() {
         _state.value = _state.value.copy(savedMessage = null)
+    }
+
+    fun exportCurrentMonth() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isExporting = true)
+            try {
+                val uri = exportCsv(YearMonth.now())
+                _state.value = _state.value.copy(isExporting = false, exportUri = uri)
+            } catch (e: Throwable) {
+                _state.value = _state.value.copy(
+                    isExporting = false,
+                    savedMessage = "Export mislukt: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun clearExportUri() {
+        _state.value = _state.value.copy(exportUri = null)
     }
 
     fun clearDatabase(onDone: () -> Unit) {
