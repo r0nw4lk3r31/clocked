@@ -183,7 +183,7 @@ fun SettingsScreen(
             )
 
             OutlinedButton(
-                onClick = { viewModel.exportCurrentMonth() },
+                onClick = { viewModel.exportSelectedMonth() },
                 enabled = !state.isExporting,
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -195,8 +195,16 @@ fun SettingsScreen(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Exporteer deze maand (CSV)")
+                    Text("Exporteer ${viewModel.selectedMonthLabel} (CSV)")
                 }
+            }
+
+            OutlinedButton(
+                onClick = { viewModel.exportAllShifts() },
+                enabled = !state.isExporting,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Exporteer alle shifts (CSV)")
             }
 
             OutlinedButton(

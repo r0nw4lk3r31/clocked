@@ -1,6 +1,7 @@
 package com.clocked.app.ui.settings
 
 import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clocked.app.data.preferences.UserPreferences
@@ -26,10 +27,16 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val prefs: UserPreferences,
     private val repository: ShiftRepository,
     private val exportCsv: ExportCsvUseCase,
 ) : ViewModel() {
+
+    private val selectedMonth: YearMonth =
+        savedStateHandle.get<String>("yearMonth")
+            ?.let { runCatching { YearMonth.parse(it) }.getOrNull() }
+            ?: YearMonth.now()
 
     private val _state = MutableStateFlow(SettingsUiState())
     val state: StateFlow<SettingsUiState> = _state.asStateFlow()
@@ -58,11 +65,18 @@ class SettingsViewModel @Inject constructor(
         _state.value = _state.value.copy(savedMessage = null)
     }
 
-    fun exportCurrentMonth() {
+    val selectedMonthLabel: String = selectedMonth.format(
+        java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.forLanguageTag("nl"))
+    ).replaceFirstChar { it.uppercase() }
+
+    fun exportSelectedMonth() = launchExport(selectedMonth)
+    fun exportAllShifts() = launchExport(null)
+
+    private fun launchExport(yearMonth: YearMonth?) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isExporting = true)
             try {
-                val uri = exportCsv(YearMonth.now())
+                val uri = exportCsv(yearMonth)
                 _state.value = _state.value.copy(isExporting = false, exportUri = uri)
             } catch (e: Throwable) {
                 _state.value = _state.value.copy(

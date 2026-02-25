@@ -24,6 +24,10 @@ class ShiftRepository @Inject constructor(private val dao: ShiftDao) {
     suspend fun getShiftsSnapshot(yearMonth: YearMonth): List<Shift> =
         dao.getShiftsForMonthOnce(yearMonth.toString()).map { it.toDomain() }
 
+    /** One-shot snapshot of every stored shift — used for full export. */
+    suspend fun getAllShiftsSnapshot(): List<Shift> =
+        dao.getAllShifts().map { it.toDomain() }
+
     /**
      * Import a list of parsed shifts. Duplicate detection is handled by
      * the UNIQUE index on (date, startTime) — duplicates are silently ignored.

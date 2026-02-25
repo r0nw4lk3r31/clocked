@@ -19,6 +19,10 @@ interface ShiftDao {
     @Query("SELECT * FROM shifts WHERE date LIKE :yearMonthPrefix || '%' ORDER BY date, startTime")
     suspend fun getShiftsForMonthOnce(yearMonthPrefix: String): List<ShiftEntity>
 
+    /** One-shot fetch of every stored shift — used for full export. */
+    @Query("SELECT * FROM shifts ORDER BY date, startTime")
+    suspend fun getAllShifts(): List<ShiftEntity>
+
     @Query("SELECT * FROM shifts WHERE id = :id")
     suspend fun getById(id: Long): ShiftEntity?
 

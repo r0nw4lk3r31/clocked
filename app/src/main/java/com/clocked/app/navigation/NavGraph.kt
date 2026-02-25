@@ -24,7 +24,9 @@ sealed class Screen(val route: String) {
     data object EditShift : Screen("edit/{shiftId}") {
         fun createRoute(shiftId: Long = -1L) = "edit/$shiftId"
     }
-    data object Settings : Screen("settings")
+    data object Settings : Screen("settings/{yearMonth}") {
+        fun createRoute(yearMonth: YearMonth) = "settings/$yearMonth"
+    }
 }
 
 @Composable
@@ -61,7 +63,7 @@ fun ClockedNavGraph() {
             ShiftsScreen(
                 onAddShift = { navController.navigate(Screen.EditShift.createRoute()) },
                 onEditShift = { id -> navController.navigate(Screen.EditShift.createRoute(id)) },
-                onSettings = { navController.navigate(Screen.Settings.route) },
+                onSettings = { month -> navController.navigate(Screen.Settings.createRoute(month)) },
             )
         }
 
@@ -74,7 +76,10 @@ fun ClockedNavGraph() {
             )
         }
 
-        composable(Screen.Settings.route) {
+        composable(
+            route = Screen.Settings.route,
+            arguments = listOf(navArgument("yearMonth") { type = NavType.StringType })
+        ) {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
                 onLogout = {

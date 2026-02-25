@@ -69,7 +69,7 @@ import java.util.Locale
 fun ShiftsScreen(
     onAddShift: () -> Unit,
     onEditShift: (Long) -> Unit,
-    onSettings: () -> Unit,
+    onSettings: (java.time.YearMonth) -> Unit,
     viewModel: ShiftsViewModel = hiltViewModel(),
 ) {
     val shifts by viewModel.shifts.collectAsState()
@@ -132,7 +132,7 @@ fun ShiftsScreen(
                 onNext = { viewModel.navigateMonth(1) },
                 onImport = { filePicker.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") },
                 onAddShift = onAddShift,
-                onSettings = onSettings,
+                onSettings = { onSettings(currentMonth) },
                 isLoading = uiState.isLoading,
             )
 
